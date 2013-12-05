@@ -261,24 +261,29 @@ func GetBuildInfo(name string, id int) (*JenkinsBuildInfo, error) {
 		return nil, err
 	}
 	info := JenkinsBuildInfo{}
-	info.Name = json["fullDisplayName"].(string)
-	info.Id = int(json["number"].(float64))
-	artifacts := json["artifacts"].([]interface{})
+	info.Name, _ = json["fullDisplayName"].(string)
+	idF64, _ := json["number"].(float64)
+	info.Id = int(idF64)
+	artifacts, _ := json["artifacts"].([]interface{})
 	info.Artifacts = make(map[string]string, 10)
 	for _, artifact := range artifacts {
 		artifactSafe := artifact.(map[string]interface{})
-		info.Artifacts[artifactSafe["displayPath"].(string)] = artifactSafe["relativePath"].(string)
+		displayPath, _ := artifactSafe["displayPath"].(string)
+		relativePath, _ := artifactSafe["relativePath"].(string)
+		if displayPath != "" && relativePath != "" {
+			info.Artifacts[displayPath] = relativePath
+		}
 	}
-	info.Building = json["building"].(bool)
-	info.Duration = json["duration"].(float64)
-	info.EstimatedDuration = json["estimatedDuration"].(float64)
+	info.Building, _ = json["building"].(bool)
+	info.Duration, _ = json["duration"].(float64)
+	info.EstimatedDuration, _ = json["estimatedDuration"].(float64)
 	if json["result"] != nil {
-		info.Result = json["result"].(string)
+		info.Result, _ = json["result"].(string)
 	} else {
 		info.Result = "BUILDING"
 	}
-	info.Timestamp = json["timestamp"].(float64)
-	info.Url = json["url"].(string)
+	info.Timestamp, _ = json["timestamp"].(float64)
+	info.Url, _ = json["url"].(string)
 	return &info, nil
 }
 
@@ -288,22 +293,24 @@ func GetInfo(name string) (*JenkinsInfo, error) {
 		return nil, err
 	}
 	info := JenkinsInfo{}
-	info.Name = json["name"].(string)
-	info.Description = json["description"].(string)
-	info.Url = json["url"].(string)
-	info.Buildable = json["buildable"].(bool)
-	info.InQueue = json["inQueue"].(bool)
+	info.Name, _ = json["name"].(string)
+	info.Description, _ = json["description"].(string)
+	info.Url, _ = json["url"].(string)
+	info.Buildable, _ = json["buildable"].(bool)
+	info.InQueue, _ = json["inQueue"].(bool)
 	lastBuild := json["lastBuild"]
 	if lastBuild != nil {
-		lastBuildSafe := lastBuild.(map[string]interface{})
-		info.LastBuild = int(lastBuildSafe["number"].(float64))
-		info.LastBuildUrl = lastBuildSafe["url"].(string)
+		lastBuildSafe, _ := lastBuild.(map[string]interface{})
+		numF64, _ := lastBuildSafe["number"].(float64)
+		info.LastBuild = int(numF64)
+		info.LastBuildUrl, _ = lastBuildSafe["url"].(string)
 	}
 	lastStableBuild := json["lastStableBuild"]
 	if lastStableBuild != nil {
-		lastStableBuildSafe := lastStableBuild.(map[string]interface{})
-		info.LastStableBuild = int(lastStableBuildSafe["number"].(float64))
-		info.LastStableBuildUrl = lastStableBuildSafe["url"].(string)
+		lastStableBuildSafe, _ := lastStableBuild.(map[string]interface{})
+		numF64, _ := lastStableBuildSafe["number"].(float64)
+		info.LastStableBuild = int(numF64)
+		info.LastStableBuildUrl, _ = lastStableBuildSafe["url"].(string)
 	}
 	return &info, nil
 }
