@@ -43,7 +43,7 @@ func (self *JenkinsInfo) Print() {
 
 type JenkinsBuildInfo struct {
 	Name              string
-	Id                int
+	ID                int
 	Artifacts         map[string]string
 	Building          bool
 	Duration          float64
@@ -55,7 +55,7 @@ type JenkinsBuildInfo struct {
 
 func (self *JenkinsBuildInfo) Print() {
 	log.Println("Build Info For", self.Name)
-	log.Println("  id                :", self.Id)
+	log.Println("  id                :", self.ID)
 	log.Println("  artifacts         :", self.Artifacts)
 	log.Println("  building          :", self.Building)
 	log.Println("  duration          :", strconv.FormatFloat(self.Duration, 'f', -1, 64))
@@ -65,7 +65,7 @@ func (self *JenkinsBuildInfo) Print() {
 	log.Println("  url               :", self.Url)
 }
 
-func sanitizeId(name string, id int) (int, error) {
+func sanitizeID(name string, id int) (int, error) {
 	if id == -1 {
 		info, err := GetInfo(name)
 		if err != nil {
@@ -102,11 +102,11 @@ func getRemote(theurl string) (io.ReadCloser, error) {
 
 func get(name string, id int) (map[string]interface{}, error) {
 	// build URL
-	nameAndId := name
+	nameAndID := name
 	if id > 0 {
-		nameAndId = path.Join(name, strconv.Itoa(id))
+		nameAndID = path.Join(name, strconv.Itoa(id))
 	}
-	theurl := "http://" + path.Join(JENKINS_SERVER, "job", nameAndId, "api", "json")
+	theurl := "http://" + path.Join(JENKINS_SERVER, "job", nameAndID, "api", "json")
 	resp, err := getRemote(theurl)
 	if err != nil {
 		return nil, err
@@ -206,14 +206,14 @@ func GetArtifactReader(name string, id int, artifact string) (io.ReadCloser, err
 	if info.Result != "SUCCESS" {
 		return nil, errors.New("the build you requested failed")
 	}
-	nameAndId := path.Join(name, strconv.Itoa(id))
-	url := "http://" + path.Join(JENKINS_SERVER, "job", nameAndId, "artifact", info.Artifacts[artifact])
+	nameAndID := path.Join(name, strconv.Itoa(id))
+	url := "http://" + path.Join(JENKINS_SERVER, "job", nameAndID, "artifact", info.Artifacts[artifact])
 	return getRemote(url)
 }
 
 func GetArtifacts(name string, id int, output string) ([]string, error) {
 	log.Print("Fetching ", name, " to ", output)
-	id, err := sanitizeId(name, id)
+	id, err := sanitizeID(name, id)
 	if err != nil {
 		return nil, err
 	}
@@ -224,11 +224,11 @@ func GetArtifacts(name string, id int, output string) ([]string, error) {
 	if info.Result != "SUCCESS" {
 		return nil, errors.New("the build you requested failed")
 	}
-	nameAndId := path.Join(name, strconv.Itoa(id))
+	nameAndID := path.Join(name, strconv.Itoa(id))
 	artifacts := []string{}
 	log.Print("Fetching artifacts for build #", id, " (", len(info.Artifacts), " total)")
 	for outpath, inpath := range info.Artifacts {
-		url := "http://" + path.Join(JENKINS_SERVER, "job", nameAndId, "artifact", inpath)
+		url := "http://" + path.Join(JENKINS_SERVER, "job", nameAndID, "artifact", inpath)
 		artifact, err := getRemote(url)
 		if err != nil {
 			return artifacts, err
@@ -252,7 +252,7 @@ func GetArtifacts(name string, id int, output string) ([]string, error) {
 }
 
 func GetBuildInfo(name string, id int) (*JenkinsBuildInfo, error) {
-	id, err := sanitizeId(name, id)
+	id, err := sanitizeID(name, id)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func GetBuildInfo(name string, id int) (*JenkinsBuildInfo, error) {
 	info := JenkinsBuildInfo{}
 	info.Name, _ = json["fullDisplayName"].(string)
 	idF64, _ := json["number"].(float64)
-	info.Id = int(idF64)
+	info.ID = int(idF64)
 	artifacts, _ := json["artifacts"].([]interface{})
 	info.Artifacts = make(map[string]string, 10)
 	for _, artifact := range artifacts {
