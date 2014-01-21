@@ -95,6 +95,7 @@ func getRemote(theurl string) (io.ReadCloser, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
+		resp.Body.Close()
 		return nil, errors.New("Bad status: " + strconv.Itoa(resp.StatusCode) + " from " + theurl)
 	}
 	return resp.Body, nil
@@ -121,7 +122,7 @@ func get(name string, id int) (map[string]interface{}, error) {
 	return retVal, nil
 }
 
-func post(name string, action string, params string) (io.ReadCloser, error) {
+func post(name string, action string, params string) error {
 	theurl := "http://" + path.Join(JENKINS_SERVER, "job", name, "buildWithParameters") + "?token=" + name + "-token"
 	form, err := url.ParseQuery(params)
 	if err != nil {
@@ -129,10 +130,10 @@ func post(name string, action string, params string) (io.ReadCloser, error) {
 	}
 	resp, err := http.PostForm(theurl, form)
 	if err != nil {
-		defer resp.Body.Close()
 		return nil, err
 	}
-	return resp.Body, nil
+	resp.Body.Close()
+	return nil
 }
 
 func DoBuild(name, params string, wait bool) (*JenkinsBuildInfo, error) {
@@ -145,11 +146,10 @@ func DoBuild(name, params string, wait bool) (*JenkinsBuildInfo, error) {
 	if info.InQueue {
 		log.Print("Job already in queue.")
 	} else {
-		out, err := post(name, "buildWithParameters", params)
+		err := post(name, "buildWithParameters", params)
 		if err != nil {
 			return nil, err
 		}
-		defer out.Close()
 		log.Print("Build #", newBuild, " scheduled.")
 	}
 	if !wait {
