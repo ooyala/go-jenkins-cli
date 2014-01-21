@@ -126,11 +126,11 @@ func post(name string, action string, params string) error {
 	theurl := "http://" + path.Join(JENKINS_SERVER, "job", name, "buildWithParameters") + "?token=" + name + "-token"
 	form, err := url.ParseQuery(params)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	resp, err := http.PostForm(theurl, form)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	resp.Body.Close()
 	return nil
